@@ -1,14 +1,18 @@
 import streamlit as st
 import requests
+import os
 
-st.title("Aman LLM Chatbot")
+st.title("My LLM Chatbot")
 
 user_input = st.text_input("Ask me anything:")
+
+# Get API key securely from Streamlit Secrets or environment variables
+API_KEY = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
 
 if st.button("Send") and user_input:
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
-        "Authorization": "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",  # <- Add your key here
+        "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json"
     }
     payload = {
@@ -16,6 +20,12 @@ if st.button("Send") and user_input:
         "messages": [{"role": "user", "content": user_input}],
         "temperature": 0.2,
     }
+
     response = requests.post(url, headers=headers, json=payload)
-    reply = response.json()["choices"][0]["message"]["content"]
-    st.write(reply)
+
+    try:
+        reply = response.json()["choices"][0]["message"]["content"]
+        st.write(reply)
+    except Exception as e:
+        st.error("Something went wrong. Full response below:")
+        st.json(response.json())
